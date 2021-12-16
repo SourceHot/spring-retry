@@ -23,6 +23,7 @@ import org.springframework.retry.RetryPolicy;
  * A {@link RetryPolicy} that always permits a retry. Can also be used as a base class for
  * other policies, e.g. for test purposes as a stub.
  *
+ * 允许无限次重试直到成功
  * @author Dave Syer
  *
  */

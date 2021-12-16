@@ -22,6 +22,7 @@ package org.springframework.retry;
  * do with avoidable cache hits and switching to stateless retry if a rollback is not
  * needed.
  *
+ * 重试状态
  * @author Dave Syer
  *
  */

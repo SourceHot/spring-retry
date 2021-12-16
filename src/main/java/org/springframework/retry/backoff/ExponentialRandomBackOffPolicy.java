@@ -40,6 +40,7 @@ import java.util.Random;
  * 267, 451, 815] (random distributed values within the ranges of [50-100, 100-200,
  * 200-400, 400-800, 800-1600])
  *
+ * 随机指数回退
  * @author Jon Travis
  * @author Dave Syer
  * @author Chase Diem

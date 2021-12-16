@@ -35,6 +35,8 @@ import org.springframework.retry.RetryContext;
  * The {@link org.springframework.retry.support.RetryTemplate} will pass in the
  * corresponding {@link BackOffContext} object created by the call to {@link #start}.
  *
+ *
+ * 重试的回退机制(策略)
  * @author Rob Harrop
  * @author Dave Syer
  */
@@ -43,6 +45,7 @@ public interface BackOffPolicy {
 	/**
 	 * Start a new block of back off operations. Implementations can choose to pause when
 	 * this method is called, but normally it returns immediately.
+	 * 启动一个回退上下文
 	 * @param context the {@link RetryContext} context, which might contain information
 	 * that we can use to decide how to proceed.
 	 * @return the implementation-specific {@link BackOffContext} or '<code>null</code>'.
@@ -53,6 +56,7 @@ public interface BackOffPolicy {
 	 * Back off/pause in an implementation-specific fashion. The passed in
 	 * {@link BackOffContext} corresponds to the one created by the call to {@link #start}
 	 * for a given retry operation set.
+	 * 暂停或者退出
 	 * @param backOffContext the {@link BackOffContext}
 	 * @throws BackOffInterruptedException if the attempt at back off is interrupted.
 	 */

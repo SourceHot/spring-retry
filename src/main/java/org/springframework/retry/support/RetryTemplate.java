@@ -69,6 +69,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
  * of retries on the fly, as well as the {@link BackOffPolicy} used and no in progress
  * retryable operations will be affected.
  *
+ * 重试模板
  * @author Rob Harrop
  * @author Dave Syer
  * @author Gary Russell

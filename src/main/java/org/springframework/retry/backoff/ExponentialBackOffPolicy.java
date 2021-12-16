@@ -34,6 +34,7 @@ import org.springframework.util.ClassUtils;
  * delay is increased for each subsequent attempt. The delay interval is capped at
  * {@link #setMaxInterval(long)}.
  *
+ * 指数级回退
  * @author Rob Harrop
  * @author Dave Syer
  * @author Gary Russell

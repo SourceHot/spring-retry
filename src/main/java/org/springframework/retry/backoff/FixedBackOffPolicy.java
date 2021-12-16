@@ -24,6 +24,7 @@ package org.springframework.retry.backoff;
  * {@link #setBackOffPeriod} during execution from multiple threads, however this may
  * cause a single retry operation to have pauses of different intervals.
  *
+ * 固定时间的回退机制,核心处理是线程暂停n秒
  * @author Rob Harrop
  * @author Dave Syer
  * @author Artem Bilan
@@ -32,6 +33,7 @@ public class FixedBackOffPolicy extends StatelessBackOffPolicy implements Sleepi
 
 	/**
 	 * Default back off period - 1000ms.
+	 * 默认休眠时间1秒
 	 */
 	private static final long DEFAULT_BACK_OFF_PERIOD = 1000L;
 

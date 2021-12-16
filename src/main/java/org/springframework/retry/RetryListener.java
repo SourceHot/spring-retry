@@ -21,6 +21,7 @@ package org.springframework.retry;
  * {@link RetryOperations} can chose to issue callbacks to an interceptor during the retry
  * lifecycle.
  *
+ * 重试监听器
  * @author Dave Syer
  *
  */
@@ -31,6 +32,7 @@ public interface RetryListener {
 	 * state that is needed by the policies in the {@link RetryOperations}. The whole
 	 * retry can be vetoed by returning false from this method, in which case a
 	 * {@link TerminatedRetryException} will be thrown.
+	 * 在开启的时候执行
 	 * @param <T> the type of object returned by the callback
 	 * @param <E> the type of exception it declares may be thrown
 	 * @param context the current {@link RetryContext}.
@@ -42,6 +44,7 @@ public interface RetryListener {
 	/**
 	 * Called after the final attempt (successful or not). Allow the interceptor to clean
 	 * up any resource it is holding before control returns to the retry caller.
+	 * 在关闭的时候执行
 	 * @param context the current {@link RetryContext}.
 	 * @param callback the current {@link RetryCallback}.
 	 * @param throwable the last exception that was thrown by the callback.
@@ -52,6 +55,7 @@ public interface RetryListener {
 
 	/**
 	 * Called after every unsuccessful attempt at a retry.
+	 * 在异常的时候执行
 	 * @param context the current {@link RetryContext}.
 	 * @param callback the current {@link RetryCallback}.
 	 * @param throwable the last exception that was thrown by the callback.

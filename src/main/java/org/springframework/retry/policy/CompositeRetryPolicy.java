@@ -28,6 +28,7 @@ import org.springframework.retry.context.RetryContextSupport;
  * A {@link RetryPolicy} that composes a list of other policies and delegates calls to
  * them in order.
  *
+ * 组合重试机制
  * @author Dave Syer
  * @author Michael Minella
  *

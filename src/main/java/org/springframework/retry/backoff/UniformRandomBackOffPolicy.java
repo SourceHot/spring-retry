@@ -26,6 +26,7 @@ import java.util.Random;
  * {@link #setMaxBackOffPeriod(long)} during execution from multiple threads, however this
  * may cause a single retry operation to have pauses of different intervals.
  *
+ * 随机时间回退机制
  * @author Rob Harrop
  * @author Dave Syer
  */

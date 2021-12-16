@@ -22,6 +22,7 @@ import org.springframework.core.AttributeAccessor;
  * Low-level access to ongoing retry operation. Normally not needed by clients, but can be
  * used to alter the course of the retry, e.g. force an early termination.
  *
+ * 重试上下文
  * @author Dave Syer
  *
  */

@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * A {@link RetryPolicy} that dynamically adapts to one of a set of injected policies
  * according to the value of the latest exception.
  *
+ * 基于异常对象的重试机制
  * @author Dave Syer
  *
  */

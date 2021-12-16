@@ -24,6 +24,7 @@ import org.springframework.retry.context.RetryContextSupport;
  * A {@link RetryPolicy} that allows a retry only if it hasn't timed out. The clock is
  * started on a call to {@link #open(RetryContext)}.
  *
+ * 基于超时时间的重试
  * @author Dave Syer
  *
  */
@@ -32,6 +33,7 @@ public class TimeoutRetryPolicy implements RetryPolicy {
 
 	/**
 	 * Default value for timeout (milliseconds).
+	 * 默认超时时间,1000毫秒.
 	 */
 	public static final long DEFAULT_TIMEOUT = 1000;
 

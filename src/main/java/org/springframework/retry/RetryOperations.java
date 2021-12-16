@@ -22,6 +22,7 @@ import org.springframework.retry.support.DefaultRetryState;
  * Defines the basic set of operations implemented by {@link RetryOperations} to execute
  * operations with configurable retry behaviour.
  *
+ * 重试操作接口,定义了重试相关内容
  * @author Rob Harrop
  * @author Dave Syer
  */
@@ -37,6 +38,8 @@ public interface RetryOperations {
 	 * @throws E any {@link Exception} raised by the {@link RetryCallback} upon
 	 * unsuccessful retry.
 	 * @throws E the exception thrown
+	 *
+	 * 执行RetryCallback接口的方法
 	 */
 	<T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback) throws E;
 
@@ -50,6 +53,7 @@ public interface RetryOperations {
 	 * @return the value returned by the {@link RetryCallback} upon successful invocation,
 	 * and that returned by the {@link RecoveryCallback} otherwise.
 	 * @throws E any {@link Exception} raised by the unsuccessful retry.
+	 * 首先执行RetryCallback接口的方法,在用尽后执行RecoveryCallback接口提供的方法
 	 */
 	<T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback, RecoveryCallback<T> recoveryCallback)
 			throws E;

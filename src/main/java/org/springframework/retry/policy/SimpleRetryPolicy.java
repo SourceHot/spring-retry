@@ -49,6 +49,7 @@ import org.springframework.util.ClassUtils;
  *
  * or by {@link org.springframework.retry.support.RetryTemplate#defaultInstance()}
  *
+ * 固定重试策略
  * @author Dave Syer
  * @author Rob Harrop
  * @author Gary Russell
@@ -59,6 +60,7 @@ public class SimpleRetryPolicy implements RetryPolicy {
 
 	/**
 	 * The default limit to the number of attempts for a new policy.
+	 * 默认的最大重试次数,三次.
 	 */
 	public final static int DEFAULT_MAX_ATTEMPTS = 3;
 

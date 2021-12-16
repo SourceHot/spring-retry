@@ -19,6 +19,7 @@ package org.springframework.retry.backoff;
 import java.io.Serializable;
 
 /**
+ * 回退上下文
  * @author Rob Harrop
  * @since 2.1
  */

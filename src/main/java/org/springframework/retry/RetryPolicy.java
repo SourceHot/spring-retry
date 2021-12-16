@@ -25,12 +25,14 @@ import java.io.Serializable;
  * retries. Context can also be external, and the {@link RetryPolicy} provides a uniform
  * API for a range of different platforms for the external context.
  *
+ * 重试机制(策略)
  * @author Dave Syer
  *
  */
 public interface RetryPolicy extends Serializable {
 
 	/**
+	 * 判断是否可以重试
 	 * @param context the current retry status
 	 * @return true if the operation can proceed
 	 */

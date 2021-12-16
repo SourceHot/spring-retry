@@ -24,6 +24,7 @@ import org.springframework.retry.context.RetryContextSupport;
  * A {@link RetryPolicy} that allows the first attempt but never permits a retry. Also be
  * used as a base class for other policies, e.g. for test purposes as a stub.
  *
+ * 只允许一次重试
  * @author Dave Syer
  *
  */

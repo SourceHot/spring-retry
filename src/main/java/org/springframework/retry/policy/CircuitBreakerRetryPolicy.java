@@ -26,6 +26,7 @@ import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.context.RetryContextSupport;
 
 /**
+ * 基于熔断的重试机制
  * @author Dave Syer
  *
  */

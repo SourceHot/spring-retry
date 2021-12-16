@@ -20,6 +20,7 @@ package org.springframework.retry.backoff;
  * Implementation of {@link BackOffPolicy} that performs a no-op and as such all retry
  * operation in a given set proceed one after the other with no pause.
  *
+ * 无回退机制，每次都立即重试
  * @author Rob Harrop
  * @since 2.1
  */
