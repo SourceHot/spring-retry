@@ -20,6 +20,7 @@ import java.io.Serializable;
 /**
  * Strategy interface for backoff policies to delegate the pausing of execution.
  *
+ * 暂停接口
  * @author Dave Syer
  *
  */

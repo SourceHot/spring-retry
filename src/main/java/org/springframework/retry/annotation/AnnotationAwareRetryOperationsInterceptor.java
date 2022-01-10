@@ -25,12 +25,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.naming.OperationNotSupportedException;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -69,20 +66,30 @@ import org.springframework.util.ReflectionUtils.MethodCallback;
 import org.springframework.util.StringUtils;
 
 /**
- * Interceptor that parses the retry metadata on the method it is invoking and delegates
- * to an appropriate RetryOperationsInterceptor.
+ * Interceptor that parses the retry metadata on the method it is invoking and delegates to an
+ * appropriate RetryOperationsInterceptor.
  *
  * @author Dave Syer
  * @author Artem Bilan
  * @author Gary Russell
  * @since 1.1
  */
-public class AnnotationAwareRetryOperationsInterceptor implements IntroductionInterceptor, BeanFactoryAware {
+public class AnnotationAwareRetryOperationsInterceptor implements IntroductionInterceptor,
+		BeanFactoryAware {
 
+	/**
+	 * 模板解析上下文
+	 */
 	private static final TemplateParserContext PARSER_CONTEXT = new TemplateParserContext();
 
+	/**
+	 * Spring EL表达式解析器
+	 */
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
+	/**
+	 * 空的方法拦截器，直接抛出异常
+	 */
 	private static final MethodInterceptor NULL_INTERCEPTOR = new MethodInterceptor() {
 		@Override
 		public Object invoke(MethodInvocation methodInvocation) throws Throwable {
@@ -90,20 +97,38 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 		}
 	};
 
+	/**
+	 * 评估上下文
+	 */
 	private final StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
 
+	/**
+	 * 对象-> 方法和方法拦截器的映射
+	 */
 	private final ConcurrentReferenceHashMap<Object, ConcurrentMap<Method, MethodInterceptor>> delegates = new ConcurrentReferenceHashMap<Object, ConcurrentMap<Method, MethodInterceptor>>();
-
+	/**
+	 * 重试上下文缓存
+	 */
 	private RetryContextCache retryContextCache = new MapRetryContextCache();
-
+	/**
+	 * 方法参数密钥生成器
+	 */
 	private MethodArgumentsKeyGenerator methodArgumentsKeyGenerator;
-
+	/**
+	 * 用于区分参数是否被处理
+	 */
 	private NewMethodArgumentsIdentifier newMethodArgumentsIdentifier;
-
+	/**
+	 * 暂停接口
+	 */
 	private Sleeper sleeper;
-
+	/**
+	 * bean工厂
+	 */
 	private BeanFactory beanFactory;
-
+	/**
+	 * 重试监听器
+	 */
 	private RetryListener[] globalListeners;
 
 	/**
@@ -158,45 +183,66 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
+		// 在成员变量delegates中搜索方法拦截器
 		MethodInterceptor delegate = getDelegate(invocation.getThis(), invocation.getMethod());
 		if (delegate != null) {
 			return delegate.invoke(invocation);
-		}
-		else {
+		} else {
 			return invocation.proceed();
 		}
 	}
 
 	private MethodInterceptor getDelegate(Object target, Method method) {
+		// 从成员变量中根据目标对象获取方法与方法拦截器映射
 		ConcurrentMap<Method, MethodInterceptor> cachedMethods = this.delegates.get(target);
+		// 如果方法与方法拦截器映射为空则初始化对象
 		if (cachedMethods == null) {
 			cachedMethods = new ConcurrentHashMap<Method, MethodInterceptor>();
 		}
+		// 从方法与方法拦截器映射中获取方法对应的方法拦截器
 		MethodInterceptor delegate = cachedMethods.get(method);
+		// 方法拦截器为空
 		if (delegate == null) {
+			// 先将空拦截器设置
 			MethodInterceptor interceptor = NULL_INTERCEPTOR;
+			// 在当前方法上搜索Retryable注解
 			Retryable retryable = AnnotatedElementUtils.findMergedAnnotation(method, Retryable.class);
+			// Retryable注解不存在
 			if (retryable == null) {
-				retryable = AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), Retryable.class);
+				// 在方法所在的类上搜索Retryable注解
+				retryable = AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(),
+						Retryable.class);
 			}
+			// Retryable注解不存在
 			if (retryable == null) {
+				// 在target对象上搜索
 				retryable = findAnnotationOnTarget(target, method, Retryable.class);
 			}
+			// Retryable注解存在
 			if (retryable != null) {
+				// 提取Retryable注解中的interceptor数据判断是否为空，不为空的情况下寻找对应实例
 				if (StringUtils.hasText(retryable.interceptor())) {
 					interceptor = this.beanFactory.getBean(retryable.interceptor(), MethodInterceptor.class);
 				}
+				// 判断Retryable注解的stateful返回结果是否为真
 				else if (retryable.stateful()) {
+					// 构造支持stateful的方法拦截器
 					interceptor = getStatefulInterceptor(target, method, retryable);
 				}
+				// 判断Retryable注解的stateful返回结果是否为假
 				else {
+					// 构造无状态的方法拦截器
 					interceptor = getStatelessInterceptor(target, method, retryable);
 				}
 			}
+			// 向方法与方法拦截器映射中加入数据
 			cachedMethods.putIfAbsent(method, interceptor);
+			// 获取方法拦截器
 			delegate = cachedMethods.get(method);
 		}
+		// 放入到成员变量delegates中
 		this.delegates.putIfAbsent(target, cachedMethods);
+		// 返回方法拦截器
 		return delegate == NULL_INTERCEPTOR ? null : delegate;
 	}
 

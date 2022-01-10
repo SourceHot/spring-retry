@@ -79,6 +79,8 @@ public @interface Retryable {
 	/**
 	 * A unique label for statistics reporting. If not provided the caller may choose to
 	 * ignore it, or provide a default.
+	 *
+	 * 标记接口
 	 * @return the label for the statistics
 	 */
 	String label() default "";
@@ -87,6 +89,10 @@ public @interface Retryable {
 	 * Flag to say that the retry is stateful: i.e. exceptions are re-thrown, but the
 	 * retry policy is applied with the same policy to subsequent invocations with the
 	 * same arguments. If false then retryable exceptions are not re-thrown.
+	 *
+	 *
+	 *
+	 * 表示重试是有状态的标志
 	 * @return true if retry is stateful, default false
 	 */
 	boolean stateful() default false;
