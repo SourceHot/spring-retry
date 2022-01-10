@@ -24,7 +24,7 @@ import org.springframework.retry.context.RetryContextSupport;
  * A {@link RetryPolicy} that allows the first attempt but never permits a retry. Also be
  * used as a base class for other policies, e.g. for test purposes as a stub.
  *
- * 只允许一次重试
+ * 只允许第一次重试,不允许后续操作
  * @author Dave Syer
  *
  */
@@ -57,6 +57,7 @@ public class NeverRetryPolicy implements RetryPolicy {
 	 * @see org.springframework.retry.RetryPolicy#open(RetryContext)
 	 */
 	public RetryContext open(RetryContext parent) {
+		// 构建NeverRetryContext上下文
 		return new NeverRetryContext(parent);
 	}
 
@@ -77,6 +78,7 @@ public class NeverRetryPolicy implements RetryPolicy {
 	 * behaviour of {@link NeverRetryPolicy#canRetry(RetryContext)} without affecting
 	 * {@link RetryContext#isExhaustedOnly()}.
 	 *
+	 * 重试上下文: 用于只进行一次重试的上下文
 	 * @author Dave Syer
 	 *
 	 */

@@ -87,14 +87,29 @@ public class RetryTemplate implements RetryOperations {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * 回退机制，默认无回退机制
+	 */
 	private volatile BackOffPolicy backOffPolicy = new NoBackOffPolicy();
 
+	/**
+	 * 重试机制，默认是固定重试次数机制
+	 */
 	private volatile RetryPolicy retryPolicy = new SimpleRetryPolicy(3);
 
+	/**
+	 * 监听器集合
+	 */
 	private volatile RetryListener[] listeners = new RetryListener[0];
 
+	/**
+	 * 重试上下文缓存对象
+	 */
 	private RetryContextCache retryContextCache = new MapRetryContextCache();
 
+	/**
+	 * 是否需要在用尽资源时抛出最后一个异常
+	 */
 	private boolean throwLastExceptionOnExhausted;
 
 	/**
@@ -272,10 +287,13 @@ public class RetryTemplate implements RetryOperations {
 	protected <T, E extends Throwable> T doExecute(RetryCallback<T, E> retryCallback,
 			RecoveryCallback<T> recoveryCallback, RetryState state) throws E, ExhaustedRetryException {
 
+		// 获取重试机制接口
 		RetryPolicy retryPolicy = this.retryPolicy;
+		// 获取重试的回退机制
 		BackOffPolicy backOffPolicy = this.backOffPolicy;
 
 		// Allow the retry policy to initialise itself...
+		// 获取重试上下文
 		RetryContext context = open(retryPolicy, state);
 		if (this.logger.isTraceEnabled()) {
 			this.logger.trace("RetryContext retrieved: " + context);
@@ -283,30 +301,41 @@ public class RetryTemplate implements RetryOperations {
 
 		// Make sure the context is available globally for clients who need
 		// it...
+		// 将当前的重试上下文放入到线程变量中
 		RetrySynchronizationManager.register(context);
 
+		// 最后的异常对象
 		Throwable lastException = null;
 
+		// 是否执行完成try代码块的标记
 		boolean exhausted = false;
 		try {
 
 			// Give clients a chance to enhance the context...
+			// 执行监听器的open方法
 			boolean running = doOpenInterceptors(retryCallback, context);
 
+			// 监听器集合处理结果返回false则需要抛出异常
 			if (!running) {
 				throw new TerminatedRetryException("Retry terminated abnormally by interceptor before first attempt");
 			}
 
 			// Get or Start the backoff context...
+			// 获取回退上下文
 			BackOffContext backOffContext = null;
+			// 尝试从重试上下文中获取回退上下文
 			Object resource = context.getAttribute("backOffContext");
 
+			// 在重试上下文中的回退上下文类型是BackOffContext做类型转换后赋值
 			if (resource instanceof BackOffContext) {
 				backOffContext = (BackOffContext) resource;
 			}
 
+			// 回退上下文为空
 			if (backOffContext == null) {
+				// 回退机制中开启回退上下文
 				backOffContext = backOffPolicy.start(context);
+				// 开启后的回退上下文不为空则放入到重试上下文的属性中
 				if (backOffContext != null) {
 					context.setAttribute("backOffContext", backOffContext);
 				}
@@ -317,6 +346,7 @@ public class RetryTemplate implements RetryOperations {
 			 * forbid the first try. This is used in the case of external retry to allow a
 			 * recovery in handleRetryExhausted without the callback processing (which
 			 * would throw an exception).
+			// 循环条件: 允许重试,资源未耗尽
 			 */
 			while (canRetry(retryPolicy, context) && !context.isExhaustedOnly()) {
 
@@ -327,27 +357,34 @@ public class RetryTemplate implements RetryOperations {
 					// Reset the last exception, so if we are successful
 					// the close interceptors will not think we failed...
 					lastException = null;
+					// 调用RetryCallback的doWithRetry方法
 					return retryCallback.doWithRetry(context);
 				}
 				catch (Throwable e) {
 
+					// 将当前异常设置给最后的异常对象
 					lastException = e;
 
 					try {
+						// 注册异常
 						registerThrowable(retryPolicy, state, context, e);
 					}
 					catch (Exception ex) {
 						throw new TerminatedRetryException("Could not register throwable", ex);
 					}
 					finally {
+						// 执行监听器的onError方法
 						doOnErrorInterceptors(retryCallback, context, e);
 					}
 
+					// 允许重试,资源未耗尽
 					if (canRetry(retryPolicy, context) && !context.isExhaustedOnly()) {
 						try {
+							// 执行回退机制的backOff方法
 							backOffPolicy.backOff(backOffContext);
 						}
 						catch (BackOffInterruptedException ex) {
+							// 最后的异常数据覆盖为BackOffInterruptedException异常
 							lastException = e;
 							// back off was prevented by another thread - fail the retry
 							if (this.logger.isDebugEnabled()) {
@@ -361,10 +398,12 @@ public class RetryTemplate implements RetryOperations {
 						this.logger.debug("Checking for rethrow: count=" + context.getRetryCount());
 					}
 
+					// 是否应该抛出异常
 					if (shouldRethrow(retryPolicy, context, state)) {
 						if (this.logger.isDebugEnabled()) {
 							this.logger.debug("Rethrow in retry for policy: count=" + context.getRetryCount());
 						}
+						// 包装异常后抛出
 						throw RetryTemplate.<E>wrapIfNecessary(e);
 					}
 
@@ -375,25 +414,34 @@ public class RetryTemplate implements RetryOperations {
 				 * but if we get this far in a stateful retry there's a reason for it,
 				 * like a circuit breaker or a rollback classifier.
 				 */
+				// 重试状态为空并且存在GLOBAL_STATE属性跳出本次循环
 				if (state != null && context.hasAttribute(GLOBAL_STATE)) {
 					break;
 				}
 			}
 
+			// 重试状态为空记录日志
 			if (state == null && this.logger.isDebugEnabled()) {
 				this.logger.debug("Retry failed last attempt: count=" + context.getRetryCount());
 			}
 
+			// 是否执行完成try代码块的标记设置为true
 			exhausted = true;
+			// 处理重试用尽的情况
 			return handleRetryExhausted(recoveryCallback, context, state);
 
 		}
+		// 异常抛出
 		catch (Throwable e) {
 			throw RetryTemplate.<E>wrapIfNecessary(e);
 		}
+		// 每次都需要执行的代码
 		finally {
+			// 调用关闭方法
 			close(retryPolicy, context, state, lastException == null || exhausted);
+			// 监听器执行close方法
 			doCloseInterceptors(retryCallback, context, lastException);
+			// 清理重试上下文
 			RetrySynchronizationManager.clear();
 		}
 
@@ -417,7 +465,7 @@ public class RetryTemplate implements RetryOperations {
 	 * @param retryPolicy the {@link RetryPolicy}
 	 * @param context the {@link RetryContext}
 	 * @param state the {@link RetryState}
-	 * @param succeeded whether the close succeeded
+	 * @param succeeded whether the close succeeded , 是否成功关闭
 	 */
 	protected void close(RetryPolicy retryPolicy, RetryContext context, RetryState state, boolean succeeded) {
 		if (state != null) {

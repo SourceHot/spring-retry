@@ -29,6 +29,7 @@ import org.springframework.retry.RetryOperations;
  * {@link #register(RetryContext)} should not be used except internally by
  * {@link RetryOperations} implementations.
  *
+ * 重试管理器，基于线程变量
  * @author Dave Syer
  *
  */

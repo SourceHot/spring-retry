@@ -49,7 +49,7 @@ import org.springframework.util.ClassUtils;
  *
  * or by {@link org.springframework.retry.support.RetryTemplate#defaultInstance()}
  *
- * 固定重试策略
+ * 固定重试次数策略
  * @author Dave Syer
  * @author Rob Harrop
  * @author Gary Russell

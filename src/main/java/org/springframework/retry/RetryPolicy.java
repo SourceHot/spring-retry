@@ -42,6 +42,7 @@ public interface RetryPolicy extends Serializable {
 	 * Acquire resources needed for the retry operation. The callback is passed in so that
 	 * marker interfaces can be used and a manager can collaborate with the callback to
 	 * set up some state in the status token.
+	 * 开始方法
 	 * @param parent the parent context if we are in a nested retry.
 	 * @return a {@link RetryContext} object specific to this policy.
 	 *
@@ -49,6 +50,7 @@ public interface RetryPolicy extends Serializable {
 	RetryContext open(RetryContext parent);
 
 	/**
+	 * 关闭方法
 	 * @param context a retry status created by the {@link #open(RetryContext)} method of
 	 * this policy.
 	 */
@@ -56,6 +58,7 @@ public interface RetryPolicy extends Serializable {
 
 	/**
 	 * Called once per retry attempt, after the callback fails.
+	 * 注册异常方法
 	 * @param context the current status object.
 	 * @param throwable the exception to throw
 	 */

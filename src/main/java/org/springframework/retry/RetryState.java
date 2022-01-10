@@ -40,6 +40,8 @@ public interface RetryState {
 	 * Indicate whether a cache lookup can be avoided. If the key is known ahead of the
 	 * retry attempt to be fresh (i.e. has never been seen before) then a cache lookup can
 	 * be avoided if this flag is true.
+	 *
+	 * 是否可以避免缓存查询
 	 * @return true if the state does not require an explicit check for the key
 	 */
 	boolean isForceRefresh();
@@ -50,6 +52,8 @@ public interface RetryState {
 	 * retry if there is an exception for which rollback is unnecessary. Example usage
 	 * would be for a stateful retry to specify a validation exception as not for
 	 * rollback.
+	 *
+	 * 判断方法参数exception是否需要回滚
 	 * @param exception the exception that caused a retry attempt to fail
 	 * @return true if this exception should cause a rollback
 	 */

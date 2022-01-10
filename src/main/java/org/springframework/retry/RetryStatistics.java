@@ -20,17 +20,21 @@ package org.springframework.retry;
  * Interface for statistics reporting of retry attempts. Counts the number of retry
  * attempts, successes, errors (including retries), and aborts.
  *
+ *
+ * 重试统计接口
  * @author Dave Syer
  *
  */
 public interface RetryStatistics {
 
 	/**
+	 * 已完成的成功重试次数。
 	 * @return the number of completed successful retry attempts.
 	 */
 	int getCompleteCount();
 
 	/**
+	 * 获取开始的重试次数
 	 * Get the number of times a retry block has been entered, irrespective of how many
 	 * times the operation was retried.
 	 * @return the number of retry blocks started.
@@ -38,24 +42,28 @@ public interface RetryStatistics {
 	int getStartedCount();
 
 	/**
+	 * 获取检测到的错误数，无论它们是否导致重试。
 	 * Get the number of errors detected, whether or not they resulted in a retry.
 	 * @return the number of errors detected.
 	 */
 	int getErrorCount();
 
 	/**
+	 * 获取块未能成功完成的次数
 	 * Get the number of times a block failed to complete successfully, even after retry.
 	 * @return the number of retry attempts that failed overall.
 	 */
 	int getAbortCount();
 
 	/**
+	 * 获取应用恢复回调的次数
 	 * Get the number of times a recovery callback was applied.
 	 * @return the number of recovered attempts.
 	 */
 	int getRecoveryCount();
 
 	/**
+	 * 统计标识符
 	 * Get an identifier for the retry block for reporting purposes.
 	 * @return an identifier for the block.
 	 */

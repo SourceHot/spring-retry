@@ -24,6 +24,7 @@ import org.springframework.retry.RetryContext;
  * caller, but if it is then implementations are free to discard the context instead of
  * saving it (null key means "no information").
  *
+ * 重试上下文缓存接口
  * @author Dave Syer
  * @see MapRetryContextCache
  *

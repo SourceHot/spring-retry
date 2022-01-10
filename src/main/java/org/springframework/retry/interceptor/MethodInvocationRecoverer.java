@@ -19,6 +19,7 @@ package org.springframework.retry.interceptor;
 /**
  * Strategy interface for recovery action when processing of an item fails.
  *
+ * 在处理失败时进行恢复操作
  * @author Dave Syer
  * @param <T> the return type
  */

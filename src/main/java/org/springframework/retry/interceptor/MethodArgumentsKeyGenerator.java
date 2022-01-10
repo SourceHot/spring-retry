@@ -26,6 +26,7 @@ public interface MethodArgumentsKeyGenerator {
 	/**
 	 * Get a unique identifier for the item that can be used to cache it between calls if
 	 * necessary, and then identify it later.
+	 * 获取唯一标识
 	 * @param item the current method arguments (may be null if there are none).
 	 * @return a unique identifier.
 	 */

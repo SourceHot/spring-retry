@@ -27,6 +27,7 @@ public interface Sleeper extends Serializable {
 
 	/**
 	 * Pause for the specified period using whatever means available.
+	 * 暂停n秒
 	 * @param backOffPeriod the backoff period
 	 * @throws InterruptedException the exception when interrupted
 	 */

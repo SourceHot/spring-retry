@@ -54,6 +54,7 @@ public @interface Retryable {
 	/**
 	 * Exception types that are retryable. Synonym for includes(). Defaults to empty (and
 	 * if excludes is also empty all exceptions are retried).
+	 * 需要进行重试操作的异常集合
 	 * @return exception types to retry
 	 */
 	Class<? extends Throwable>[] value() default {};
@@ -61,6 +62,7 @@ public @interface Retryable {
 	/**
 	 * Exception types that are retryable. Defaults to empty (and if excludes is also
 	 * empty all exceptions are retried).
+	 * 需要进行重试操作的异常集合
 	 * @return exception types to retry
 	 */
 	Class<? extends Throwable>[] include() default {};
@@ -69,6 +71,7 @@ public @interface Retryable {
 	 * Exception types that are not retryable. Defaults to empty (and if includes is also
 	 * empty all exceptions are retried). If includes is empty but excludes is not, all
 	 * not excluded exceptions are retried
+	 * 不需要进行重试操作的异常集合
 	 * @return exception types not to retry
 	 */
 	Class<? extends Throwable>[] exclude() default {};
@@ -89,6 +92,7 @@ public @interface Retryable {
 	boolean stateful() default false;
 
 	/**
+	 * 最大重试次数
 	 * @return the maximum number of attempts (including the first failure), defaults to 3
 	 */
 	int maxAttempts() default 3;
@@ -104,6 +108,8 @@ public @interface Retryable {
 	 * Specify the backoff properties for retrying this operation. The default is a simple
 	 * {@link Backoff} specification with no properties - see it's documentation for
 	 * defaults.
+	 *
+	 * 重试回退属性
 	 * @return a backoff specification
 	 */
 	Backoff backoff() default @Backoff();

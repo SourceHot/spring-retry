@@ -19,11 +19,15 @@ package org.springframework.retry.stats;
 import org.springframework.retry.RetryStatistics;
 
 /**
+ * 统计仓库
  * @author Dave Syer
  *
  */
 public interface StatisticsRepository {
 
+	/**
+	 * 根据统计标识符获取重试统计对象
+	 */
 	RetryStatistics findOne(String name);
 
 	Iterable<RetryStatistics> findAll();

@@ -86,10 +86,19 @@ import org.springframework.util.Assert;
  */
 public class RetryTemplateBuilder {
 
+	/**
+	 * 重试机制(策略)
+	 */
 	private RetryPolicy baseRetryPolicy;
 
+	/**
+	 * 重试的回退机制(策略)
+	 */
 	private BackOffPolicy backOffPolicy;
 
+	/**
+	 * 重试监听器集合
+	 */
 	private List<RetryListener> listeners;
 
 	private BinaryExceptionClassifierBuilder classifierBuilder;

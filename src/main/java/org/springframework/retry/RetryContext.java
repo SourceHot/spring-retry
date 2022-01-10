@@ -59,17 +59,21 @@ public interface RetryContext extends AttributeAccessor {
 	/**
 	 * Signal to the framework that no more attempts should be made to try or retry the
 	 * current {@link RetryCallback}.
+	 *
+	 * 设置用尽
 	 */
 	void setExhaustedOnly();
 
 	/**
 	 * Public accessor for the exhausted flag {@link #setExhaustedOnly()}.
+	 * 是否用尽
 	 * @return true if the flag has been set.
 	 */
 	boolean isExhaustedOnly();
 
 	/**
 	 * Accessor for the parent context if retry blocks are nested.
+	 * 获取父重试上下文
 	 * @return the parent or null if there is none.
 	 */
 	RetryContext getParent();
@@ -77,6 +81,7 @@ public interface RetryContext extends AttributeAccessor {
 	/**
 	 * Counts the number of retry attempts. Before the first attempt this counter is zero,
 	 * and before the first and subsequent attempts it should increment accordingly.
+	 * 获取重试次数
 	 * @return the number of retries.
 	 */
 	int getRetryCount();
@@ -86,6 +91,8 @@ public interface RetryContext extends AttributeAccessor {
 	 * @return the last exception that caused a retry, or possibly null. It will be null
 	 * if this is the first attempt, but also if the enclosing policy decides not to
 	 * provide it (e.g. because of concerns about memory usage).
+	 *
+	 * 获取最后的异常
 	 */
 	Throwable getLastThrowable();
 
