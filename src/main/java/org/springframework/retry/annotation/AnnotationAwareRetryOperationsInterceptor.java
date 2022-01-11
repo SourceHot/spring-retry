@@ -193,7 +193,7 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	}
 
 	private MethodInterceptor getDelegate(Object target, Method method) {
-		// 从成员变量中根据目标对象获取方法与方法拦截器映射
+		// 从成员变量delegates中根据目标对象获取方法与方法拦截器映射
 		ConcurrentMap<Method, MethodInterceptor> cachedMethods = this.delegates.get(target);
 		// 如果方法与方法拦截器映射为空则初始化对象
 		if (cachedMethods == null) {
@@ -249,55 +249,89 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	private <A extends Annotation> A findAnnotationOnTarget(Object target, Method method, Class<A> annotation) {
 
 		try {
-			Method targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());
+			// 在target的类中搜索method对应的方法
+			Method targetMethod = target.getClass()
+					.getMethod(method.getName(), method.getParameterTypes());
+			// 在方法上搜索注解
 			A retryable = AnnotatedElementUtils.findMergedAnnotation(targetMethod, annotation);
+			// 在方法所在类上搜索注解
 			if (retryable == null) {
-				retryable = AnnotatedElementUtils.findMergedAnnotation(targetMethod.getDeclaringClass(), annotation);
+				retryable = AnnotatedElementUtils.findMergedAnnotation(targetMethod.getDeclaringClass(),
+						annotation);
 			}
 
 			return retryable;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			return null;
 		}
 	}
 
-	private MethodInterceptor getStatelessInterceptor(Object target, Method method, Retryable retryable) {
+	private MethodInterceptor getStatelessInterceptor(Object target, Method method,
+			Retryable retryable) {
+		// 创建RetryTemplate对象
 		RetryTemplate template = createTemplate(retryable.listeners());
+		// 设置RetryPolicy
 		template.setRetryPolicy(getRetryPolicy(retryable));
+		// 设置BackOffPolicy
 		template.setBackOffPolicy(getBackoffPolicy(retryable.backoff()));
+		// 构造方法拦截器
 		return RetryInterceptorBuilder.stateless().retryOperations(template).label(retryable.label())
 				.recoverer(getRecoverer(target, method)).build();
 	}
 
-	private MethodInterceptor getStatefulInterceptor(Object target, Method method, Retryable retryable) {
+	// 构造支持stateful的方法拦截器
+	private MethodInterceptor getStatefulInterceptor(Object target, Method method,
+			Retryable retryable) {
+		// 创建RetryTemplate对象
 		RetryTemplate template = createTemplate(retryable.listeners());
+		// 为RetryTemplate对象设置重试上下文缓存
 		template.setRetryContextCache(this.retryContextCache);
 
-		CircuitBreaker circuit = AnnotatedElementUtils.findMergedAnnotation(method, CircuitBreaker.class);
+		// 在方法上搜索CircuitBreaker注解
+		CircuitBreaker circuit = AnnotatedElementUtils.findMergedAnnotation(method,
+				CircuitBreaker.class);
+		// CircuitBreaker注解为空
 		if (circuit == null) {
+			// 在target对象上搜索CircuitBreaker注解
 			circuit = findAnnotationOnTarget(target, method, CircuitBreaker.class);
 		}
+		// CircuitBreaker注解不为空
 		if (circuit != null) {
+			// 通过CircuitBreaker注解中获取RetryPolicy接口的实现类
 			RetryPolicy policy = getRetryPolicy(circuit);
+			// 创建CircuitBreakerRetryPolicy对象
 			CircuitBreakerRetryPolicy breaker = new CircuitBreakerRetryPolicy(policy);
+			// 为CircuitBreakerRetryPolicy对象设置openTimeout属性
 			breaker.setOpenTimeout(getOpenTimeout(circuit));
+			// 为CircuitBreakerRetryPolicy对象设置resetTimeout属性
 			breaker.setResetTimeout(getResetTimeout(circuit));
+			// 为RetryTemplate对象设置retryPolicy属性
 			template.setRetryPolicy(breaker);
+			// 为RetryTemplate对象设置backOffPolicy属性
 			template.setBackOffPolicy(new NoBackOffPolicy());
+			// 获取CircuitBreaker注解的label属性
 			String label = circuit.label();
+			// 如果label属性为空
 			if (!StringUtils.hasText(label)) {
+				// 将label设置为方法签名
 				label = method.toGenericString();
 			}
+			// 构造方法拦截器返回
 			return RetryInterceptorBuilder.circuitBreaker().keyGenerator(new FixedKeyGenerator("circuit"))
 					.retryOperations(template).recoverer(getRecoverer(target, method)).label(label).build();
 		}
+		// 通过CircuitBreaker注解中获取RetryPolicy接口的实现类
 		RetryPolicy policy = getRetryPolicy(retryable);
+		// 为RetryTemplate设置retryPolicy属性
 		template.setRetryPolicy(policy);
+		// 为RetryTemplate设置backOffPolicy属性
 		template.setBackOffPolicy(getBackoffPolicy(retryable.backoff()));
+		// 在Retryable注解中获取label属性
 		String label = retryable.label();
+		// 构造方法拦截器返回
 		return RetryInterceptorBuilder.stateful().keyGenerator(this.methodArgumentsKeyGenerator)
-				.newMethodArgumentsIdentifier(this.newMethodArgumentsIdentifier).retryOperations(template).label(label)
+				.newMethodArgumentsIdentifier(this.newMethodArgumentsIdentifier).retryOperations(template)
+				.label(label)
 				.recoverer(getRecoverer(target, method)).build();
 	}
 
@@ -324,11 +358,16 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	}
 
 	private RetryTemplate createTemplate(String[] listenersBeanNames) {
+		// 创建RetryTemplate对象
 		RetryTemplate template = new RetryTemplate();
+		// 如果监听器器名称集合数量大于0
 		if (listenersBeanNames.length > 0) {
+			// 从容器中找到监听器名称集合对应的bean实例放入到RetryTemplate对象中
 			template.setListeners(getListenersBeans(listenersBeanNames));
 		}
+		// 全局的监听器不为空
 		else if (this.globalListeners != null) {
+			// 将全局监听器设置到RetryTemplate对象中
 			template.setListeners(this.globalListeners);
 		}
 		return template;
@@ -342,7 +381,15 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 		return listeners;
 	}
 
+	/**
+	 * todo:
+	 *
+	 * @param target
+	 * @param method
+	 * @return
+	 */
 	private MethodInvocationRecoverer<?> getRecoverer(Object target, Method method) {
+		// 判断target
 		if (target instanceof MethodInvocationRecoverer) {
 			return (MethodInvocationRecoverer<?>) target;
 		}
@@ -362,6 +409,11 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 		return new RecoverAnnotationRecoveryHandler<Object>(target, method);
 	}
 
+	/**
+	 * todo:
+	 * @param retryable
+	 * @return
+	 */
 	private RetryPolicy getRetryPolicy(Annotation retryable) {
 		Map<String, Object> attrs = AnnotationUtils.getAnnotationAttributes(retryable);
 		@SuppressWarnings("unchecked")
@@ -405,6 +457,11 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 		}
 	}
 
+	/**
+	 * todo:
+	 * @param backoff
+	 * @return
+	 */
 	private BackOffPolicy getBackoffPolicy(Backoff backoff) {
 		long min = backoff.delay() == 0 ? backoff.value() : backoff.delay();
 		if (StringUtils.hasText(backoff.delayExpression())) {

@@ -138,6 +138,8 @@ public @interface Retryable {
 	/**
 	 * Bean names of retry listeners to use instead of default ones defined in Spring
 	 * context
+	 *
+	 * 监听器名称集合
 	 * @return retry listeners bean names
 	 */
 	String[] listeners() default {};
