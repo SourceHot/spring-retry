@@ -389,10 +389,11 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	 * @return
 	 */
 	private MethodInvocationRecoverer<?> getRecoverer(Object target, Method method) {
-		// 判断target
+		// 判断target类型是否是MethodInvocationRecoverer，如果是将直接返回
 		if (target instanceof MethodInvocationRecoverer) {
 			return (MethodInvocationRecoverer<?>) target;
 		}
+		// 用于确认是否找到Recover注解
 		final AtomicBoolean foundRecoverable = new AtomicBoolean(false);
 		ReflectionUtils.doWithMethods(target.getClass(), new MethodCallback() {
 			@Override
@@ -403,9 +404,11 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 			}
 		});
 
+		// 如果没找到返回null
 		if (!foundRecoverable.get()) {
 			return null;
 		}
+		// 构造RecoverAnnotationRecoveryHandler对象返回
 		return new RecoverAnnotationRecoveryHandler<Object>(target, method);
 	}
 
