@@ -45,8 +45,14 @@ import org.springframework.util.StringUtils;
  */
 public class RetryOperationsInterceptor implements MethodInterceptor {
 
+	/**
+	 * 重试操作接口
+	 */
 	private RetryOperations retryOperations = new RetryTemplate();
 
+	/**
+	 * 在处理失败时进行恢复操作
+	 */
 	private MethodInvocationRecoverer<?> recoverer;
 
 	private String label;

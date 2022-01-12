@@ -17,7 +17,7 @@ package org.springframework.retry.interceptor;
 
 /**
  * Interface that allows method parameters to be identified and tagged by a unique key.
- *
+ * 方法参数密钥生成器
  * @author Dave Syer
  *
  */

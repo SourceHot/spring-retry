@@ -17,15 +17,12 @@
 package org.springframework.retry.interceptor;
 
 import java.util.Arrays;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.classify.Classifier;
 import org.springframework.retry.RecoveryCallback;
-import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryOperations;
 import org.springframework.retry.RetryState;
@@ -58,19 +55,33 @@ import org.springframework.util.StringUtils;
 public class StatefulRetryOperationsInterceptor implements MethodInterceptor {
 
 	private transient final Log logger = LogFactory.getLog(getClass());
-
+	/**
+	 * 方法参数密钥生成器
+	 */
 	private MethodArgumentsKeyGenerator keyGenerator;
-
+	/**
+	 *在处理失败时进行恢复操作
+	 */
 	private MethodInvocationRecoverer<?> recoverer;
-
+	/**
+	 * 用于区分参数是否被处理
+	 */
 	private NewMethodArgumentsIdentifier newMethodArgumentsIdentifier;
-
+	/**
+	 * 重试操作接口
+	 */
 	private RetryOperations retryOperations;
-
+	/**
+	 * 标记信息
+	 */
 	private String label;
-
+	/**
+	 * 异常分类器
+	 */
 	private Classifier<? super Throwable, Boolean> rollbackClassifier;
-
+	/**
+	 * 是否使用原始密钥
+	 */
 	private boolean useRawKey;
 
 	public StatefulRetryOperationsInterceptor() {
@@ -147,35 +158,47 @@ public class StatefulRetryOperationsInterceptor implements MethodInterceptor {
 	@Override
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
 
+		// 日志记录
 		if (this.logger.isDebugEnabled()) {
 			this.logger.debug("Executing proxied method in stateful retry: " + invocation.getStaticPart() + "("
 					+ ObjectUtils.getIdentityHexString(invocation) + ")");
 		}
 
+		// 获取方法参数
 		Object[] args = invocation.getArguments();
+		// 将参数放到array中
 		Object defaultKey = Arrays.asList(args);
+
+		// 如果方法参数数量为1将获取第一个元素设置到变量defaultKey中
 		if (args.length == 1) {
 			defaultKey = args[0];
 		}
 
+		// 通过createKey将方法调用对象和变量defaultKey生成缓存key
 		Object key = createKey(invocation, defaultKey);
+		// 创建重试状态对象
 		RetryState retryState = new DefaultRetryState(key,
 				this.newMethodArgumentsIdentifier != null && this.newMethodArgumentsIdentifier.isNew(args),
 				this.rollbackClassifier);
 
+		// 通过重试操作接口执行具体操作
 		Object result = this.retryOperations.execute(new StatefulMethodInvocationRetryCallback(invocation, label),
 				this.recoverer != null ? new ItemRecovererCallback(args, this.recoverer) : null, retryState);
 
+		// 日志
 		if (this.logger.isDebugEnabled()) {
 			this.logger.debug("Exiting proxied method in stateful retry with result: (" + result + ")");
 		}
 
+		// 返回重试接口的处理结果
 		return result;
 
 	}
 
 	private Object createKey(final MethodInvocation invocation, Object defaultKey) {
+		// 将传入的key设置到生成的key变量中
 		Object generatedKey = defaultKey;
+		// 如果key生成器不为空将通过它和参数集合生成key
 		if (this.keyGenerator != null) {
 			generatedKey = this.keyGenerator.getKey(invocation.getArguments());
 		}
