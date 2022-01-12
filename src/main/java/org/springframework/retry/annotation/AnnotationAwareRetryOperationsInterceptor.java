@@ -382,8 +382,6 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	}
 
 	/**
-	 * todo:
-	 *
 	 * @param target
 	 * @param method
 	 * @return
@@ -413,44 +411,66 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	}
 
 	/**
-	 * todo:
 	 * @param retryable
 	 * @return
+	 * @see Retryable
 	 */
 	private RetryPolicy getRetryPolicy(Annotation retryable) {
+		// 获取Retryable注解的属性
 		Map<String, Object> attrs = AnnotationUtils.getAnnotationAttributes(retryable);
+		// 将Retryable注解的value属性获取
 		@SuppressWarnings("unchecked")
 		Class<? extends Throwable>[] includes = (Class<? extends Throwable>[]) attrs.get("value");
+
+		// 将Retryable注解的exceptionExpression属性获取
 		String exceptionExpression = (String) attrs.get("exceptionExpression");
+		// 判断exceptionExpression属性是否存在
 		boolean hasExpression = StringUtils.hasText(exceptionExpression);
+		// 如果value属性值数量为0
 		if (includes.length == 0) {
+			// 提取include属性
 			@SuppressWarnings("unchecked")
 			Class<? extends Throwable>[] value = (Class<? extends Throwable>[]) attrs.get("include");
+			// 将include属性赋值到includes变量中
 			includes = value;
 		}
+		// 提取exclude属性
 		@SuppressWarnings("unchecked")
 		Class<? extends Throwable>[] excludes = (Class<? extends Throwable>[]) attrs.get("exclude");
+		// 提取maxAttempts属性
 		Integer maxAttempts = (Integer) attrs.get("maxAttempts");
+		// 提取maxAttemptsExpression属性
 		String maxAttemptsExpression = (String) attrs.get("maxAttemptsExpression");
+		// 如果maxAttemptsExpression属性存在
 		if (StringUtils.hasText(maxAttemptsExpression)) {
+			// 通过Spring-EL表达式解析maxAttemptsExpression数据，将其赋值给maxAttempts变量
 			maxAttempts = PARSER.parseExpression(resolve(maxAttemptsExpression), PARSER_CONTEXT)
 					.getValue(this.evaluationContext, Integer.class);
 		}
+		// 如果includes变量的数量和excludes变量的数量都为0
 		if (includes.length == 0 && excludes.length == 0) {
+			// 如果hasExpression变量为真创建ExpressionRetryPolicy对象，反之则创建SimpleRetryPolicy对象
 			SimpleRetryPolicy simple = hasExpression
-					? new ExpressionRetryPolicy(resolve(exceptionExpression)).withBeanFactory(this.beanFactory)
+					? new ExpressionRetryPolicy(resolve(exceptionExpression)).withBeanFactory(
+					this.beanFactory)
 					: new SimpleRetryPolicy();
+			// 设置maxAttempts属性
 			simple.setMaxAttempts(maxAttempts);
 			return simple;
 		}
+		// 创建异常是否需要排除的映射表
 		Map<Class<? extends Throwable>, Boolean> policyMap = new HashMap<Class<? extends Throwable>, Boolean>();
+		// includes中的异常不能排除
 		for (Class<? extends Throwable> type : includes) {
 			policyMap.put(type, true);
 		}
+		// excludes中的异常表示需要排除
 		for (Class<? extends Throwable> type : excludes) {
 			policyMap.put(type, false);
 		}
+		// 重试不排除标记
 		boolean retryNotExcluded = includes.length == 0;
+		// 如果hasExpression变量为真创建ExpressionRetryPolicy对象，反之则创建SimpleRetryPolicy对象
 		if (hasExpression) {
 			return new ExpressionRetryPolicy(maxAttempts, policyMap, true, exceptionExpression, retryNotExcluded)
 					.withBeanFactory(this.beanFactory);

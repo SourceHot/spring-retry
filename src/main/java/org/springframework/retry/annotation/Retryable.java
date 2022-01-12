@@ -132,6 +132,8 @@ public @interface Retryable {
 	 * </pre>
 	 * @return the expression.
 	 * @since 1.2
+	 *
+	 * 异常表达式
 	 */
 	String exceptionExpression() default "";
 
