@@ -51,6 +51,8 @@ public @interface Backoff {
 	/**
 	 * Synonym for {@link #delay()}. When {@link #delay()} is non-zero, value of this
 	 * element is ignored, otherwise value of this element is taken.
+	 *
+	 * 最小延迟时间
 	 * @return the delay in milliseconds (default 1000)
 	 */
 	long value() default 1000;
@@ -69,6 +71,8 @@ public @interface Backoff {
 	 * {@link #delay()} then the default of
 	 * {@value org.springframework.retry.backoff.ExponentialBackOffPolicy#DEFAULT_MAX_INTERVAL}
 	 * is applied.
+	 *
+	 * 最大延迟时间
 	 * @return the maximum delay between retries (default 0 = ignored)
 	 */
 	long maxDelay() default 0;

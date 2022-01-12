@@ -108,6 +108,7 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
 	/**
 	 * Set the initial sleep interval value. Default is {@code 100} millisecond. Cannot be
 	 * set to a value less than one.
+	 * 设置间隔时间
 	 * @param initialInterval the initial interval
 	 */
 	public void setInitialInterval(long initialInterval) {

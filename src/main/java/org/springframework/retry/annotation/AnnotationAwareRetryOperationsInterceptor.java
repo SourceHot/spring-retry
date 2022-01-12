@@ -481,53 +481,78 @@ public class AnnotationAwareRetryOperationsInterceptor implements IntroductionIn
 	}
 
 	/**
-	 * todo:
+	 * 延迟是指两次处理之间的时间差
 	 * @param backoff
 	 * @return
 	 */
 	private BackOffPolicy getBackoffPolicy(Backoff backoff) {
+		// 获取Backoff注解中的最小延迟时间
+		// delay属性为空采用value，反之则采用delay属性
 		long min = backoff.delay() == 0 ? backoff.value() : backoff.delay();
+		// delayExpression表达式存在则将其作为最小延迟时间
 		if (StringUtils.hasText(backoff.delayExpression())) {
 			min = PARSER.parseExpression(resolve(backoff.delayExpression()), PARSER_CONTEXT)
 					.getValue(this.evaluationContext, Long.class);
 		}
+		// 获取Backoff注解中的最大延迟时间
 		long max = backoff.maxDelay();
+		// maxDelayExpression表达式存在则将其作为最大延迟时间
 		if (StringUtils.hasText(backoff.maxDelayExpression())) {
 			max = PARSER.parseExpression(resolve(backoff.maxDelayExpression()), PARSER_CONTEXT)
 					.getValue(this.evaluationContext, Long.class);
 		}
+		// 获取Backoff注解中的multiplier数据
 		double multiplier = backoff.multiplier();
+		// multiplierExpression表达式存在则将其解析作为multiplier数据
 		if (StringUtils.hasText(backoff.multiplierExpression())) {
 			multiplier = PARSER.parseExpression(resolve(backoff.multiplierExpression()), PARSER_CONTEXT)
 					.getValue(this.evaluationContext, Double.class);
 		}
+		// 如果multiplier数据大于0
 		if (multiplier > 0) {
+			// 创建ExponentialBackOffPolicy对象
 			ExponentialBackOffPolicy policy = new ExponentialBackOffPolicy();
+			// 如果random属性为真则创建ExponentialRandomBackOffPolicy
 			if (backoff.random()) {
 				policy = new ExponentialRandomBackOffPolicy();
 			}
+			// 设置间隔时间
 			policy.setInitialInterval(min);
+			// 设置乘数
 			policy.setMultiplier(multiplier);
+
+			// 设置最大间隔时间
 			policy.setMaxInterval(max > min ? max : ExponentialBackOffPolicy.DEFAULT_MAX_INTERVAL);
+			// 设置暂停接口
 			if (this.sleeper != null) {
 				policy.setSleeper(this.sleeper);
 			}
+			// 返回对象
 			return policy;
 		}
+		// 如果最大延迟时间大于最小延迟时间
 		if (max > min) {
+			// 创建UniformRandomBackOffPolicy对象
 			UniformRandomBackOffPolicy policy = new UniformRandomBackOffPolicy();
+			// 设置最小最大延迟时间
 			policy.setMinBackOffPeriod(min);
 			policy.setMaxBackOffPeriod(max);
+			// 设置暂停接口
 			if (this.sleeper != null) {
 				policy.setSleeper(this.sleeper);
 			}
+			// 返回对象
 			return policy;
 		}
+		// 创建FixedBackOffPolicy对象
 		FixedBackOffPolicy policy = new FixedBackOffPolicy();
+		// 设置最小延迟时间
 		policy.setBackOffPeriod(min);
+		// 设置暂停接口
 		if (this.sleeper != null) {
 			policy.setSleeper(this.sleeper);
 		}
+		// 返回对象
 		return policy;
 	}
 
