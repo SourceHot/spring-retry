@@ -196,7 +196,7 @@ public class StatefulRetryOperationsInterceptor implements MethodInterceptor {
 	}
 
 	private Object createKey(final MethodInvocation invocation, Object defaultKey) {
-		// 将传入的key设置到生成的key变量中
+		// 将传入的key设置到生成的key变量generatedKey中
 		Object generatedKey = defaultKey;
 		// 如果key生成器不为空将通过它和参数集合生成key
 		if (this.keyGenerator != null) {
@@ -207,10 +207,13 @@ public class StatefulRetryOperationsInterceptor implements MethodInterceptor {
 			// really doesn't want to retry.
 			return null;
 		}
+		// 如果允许使用原始密钥将会返回前面生成的key
 		if (this.useRawKey) {
 			return generatedKey;
 		}
+		// 确认名称
 		String name = StringUtils.hasText(label) ? label : invocation.getMethod().toGenericString();
+		// 返回最终结果
 		return Arrays.asList(name, generatedKey);
 	}
 
