@@ -72,6 +72,9 @@ public class RetryOperationsInterceptor implements MethodInterceptor {
 
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
 
+		// 确认名称
+		// 1. label数据不为空将其作为名称
+		// 2. 将方法签名作为名称
 		String name;
 		if (StringUtils.hasText(label)) {
 			name = label;
@@ -81,11 +84,13 @@ public class RetryOperationsInterceptor implements MethodInterceptor {
 		}
 		final String label = name;
 
+		// 创建RetryCallback对象
 		RetryCallback<Object, Throwable> retryCallback = new MethodInvocationRetryCallback<Object, Throwable>(
 				invocation, label) {
 
 			public Object doWithRetry(RetryContext context) throws Exception {
 
+				// 设置name属性为label
 				context.setAttribute(RetryContext.NAME, label);
 
 				/*
@@ -94,6 +99,7 @@ public class RetryOperationsInterceptor implements MethodInterceptor {
 				 * specialise to ReflectiveMethodInvocation (but how often would another
 				 * implementation come along?).
 				 */
+				// 变量invocation类型是ProxyMethodInvocation直接克隆后执行
 				if (invocation instanceof ProxyMethodInvocation) {
 					try {
 						return ((ProxyMethodInvocation) invocation).invocableClone().proceed();
@@ -117,11 +123,13 @@ public class RetryOperationsInterceptor implements MethodInterceptor {
 
 		};
 
+		// 成员变量recoverer不为空的情况下构造ItemRecovererCallback对象然后调用重试操作接口
 		if (recoverer != null) {
 			ItemRecovererCallback recoveryCallback = new ItemRecovererCallback(invocation.getArguments(), recoverer);
 			return this.retryOperations.execute(retryCallback, recoveryCallback);
 		}
 
+		// 调用重试操作接口
 		return this.retryOperations.execute(retryCallback);
 
 	}
