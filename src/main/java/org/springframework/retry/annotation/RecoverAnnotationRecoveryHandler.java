@@ -50,12 +50,24 @@ import org.springframework.util.StringUtils;
  */
 public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationRecoverer<T> {
 
+	/**
+	 * 分类器
+	 */
 	private SubclassClassifier<Throwable, Method> classifier = new SubclassClassifier<Throwable, Method>();
 
+	/**
+	 * 方法映射表
+	 */
 	private Map<Method, SimpleMetadata> methods = new HashMap<Method, SimpleMetadata>();
 
+	/**
+	 * 目标对象
+	 */
 	private Object target;
 
+	/**
+	 * recover方法名称
+	 */
 	private String recoverMethodName;
 
 	public RecoverAnnotationRecoveryHandler(Object target, Method method) {
@@ -65,20 +77,27 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 
 	@Override
 	public T recover(Object[] args, Throwable cause) {
+		// 根据参数和异常选择方法
 		Method method = findClosestMatch(args, cause.getClass());
+		// 搜索的方法结果为空抛出异常
 		if (method == null) {
 			throw new ExhaustedRetryException("Cannot locate recovery method", cause);
 		}
+		// 在方法映射表重找到元信息
 		SimpleMetadata meta = this.methods.get(method);
+		// 元信息中获取参数集合
 		Object[] argsToUse = meta.getArgs(cause, args);
+		// 获取方法的accessible标记
 		boolean methodAccessible = method.isAccessible();
 		try {
+			// 标记accessible为true
 			ReflectionUtils.makeAccessible(method);
+			// 执行method方法
 			@SuppressWarnings("unchecked")
 			T result = (T) ReflectionUtils.invokeMethod(method, this.target, argsToUse);
 			return result;
-		}
-		finally {
+		} finally {
+			// 方法的accessible标记不相同的情况下重新覆盖
 			if (methodAccessible != method.isAccessible()) {
 				method.setAccessible(methodAccessible);
 			}
@@ -86,26 +105,42 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 	}
 
 	private Method findClosestMatch(Object[] args, Class<? extends Throwable> cause) {
+		// 返回结果
 		Method result = null;
 
+		// recover方法名称为空的情况
 		if (StringUtils.isEmpty(this.recoverMethodName)) {
+			// 最小值
 			int min = Integer.MAX_VALUE;
+			// 遍历方法映射表寻找方法
 			for (Map.Entry<Method, SimpleMetadata> entry : this.methods.entrySet()) {
+				// 获取方法
 				Method method = entry.getKey();
+				// 获取元数据
 				SimpleMetadata meta = entry.getValue();
+				// 获取元数据中的异常对象
 				Class<? extends Throwable> type = meta.getType();
+				// 如果异常对象为空将采用Throwable
 				if (type == null) {
 					type = Throwable.class;
 				}
+				// 判断输入的异常是否是元数据中的异常子类
 				if (type.isAssignableFrom(cause)) {
+					// 计算继承层级
 					int distance = calculateDistance(cause, type);
+					// 层级小于最小数值
 					if (distance < min) {
+						// 将最小值数据修改为继承层级
 						min = distance;
+						// 将返回结果修改为当前遍历中的方法
 						result = method;
 					}
+					// 层级和最小数值相同
 					else if (distance == min) {
+						// 参数比较
 						boolean parametersMatch = compareParameters(args, meta.getArgCount(),
 								method.getParameterTypes());
+						// 如果参数比较通过将返回结果修改为当前遍历中的方法
 						if (parametersMatch) {
 							result = method;
 						}
@@ -113,11 +148,17 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 				}
 			}
 		}
+		// recover方法名称不为空的情况
 		else {
+			// 遍历方法映射表寻找方法
 			for (Map.Entry<Method, SimpleMetadata> entry : this.methods.entrySet()) {
+				// 获取当前方法
 				Method method = entry.getKey();
+				// 判断当前处理的方法是否和成员变量recoverMethodName相同
 				if (method.getName().equals(this.recoverMethodName)) {
+					// 提取元数据
 					SimpleMetadata meta = entry.getValue();
+					// 判断输入的异常是否是元数据中的异常子类，同时机械能参数比较
 					if (meta.type.isAssignableFrom(cause)
 							&& compareParameters(args, meta.getArgCount(), method.getParameterTypes())) {
 						result = method;
@@ -160,29 +201,42 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 	}
 
 	private void init(final Object target, Method method) {
+		// 构造异常和方法的映射表
 		final Map<Class<? extends Throwable>, Method> types = new HashMap<Class<? extends Throwable>, Method>();
 		final Method failingMethod = method;
+		// 在传入的方法对象中搜索Retryable注解
 		Retryable retryable = AnnotationUtils.findAnnotation(method, Retryable.class);
+		// 注解Retryable不为空的情况下将recover属性设置到成员变量recoverMethodName中
 		if (retryable != null) {
 			this.recoverMethodName = retryable.recover();
 		}
 		ReflectionUtils.doWithMethods(target.getClass(), new MethodCallback() {
 			@Override
 			public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+				// 在方法上寻找Recover注解
 				Recover recover = AnnotationUtils.findAnnotation(method, Recover.class);
+				// 方法上Recover注解为空的情况在target对象上寻找
 				if (recover == null) {
 					recover = findAnnotationOnTarget(target, method);
 				}
-				if (recover != null && method.getReturnType().isAssignableFrom(failingMethod.getReturnType())) {
+				// Recover注解存在并且当前方法返回值和failingMethod方法返回值同源
+				if (recover != null && method.getReturnType()
+						.isAssignableFrom(failingMethod.getReturnType())) {
+					// 提取参数类型
 					Class<?>[] parameterTypes = method.getParameterTypes();
+					// 参数类型数量大于0，并且第一个参数和Throwable同源
 					if (parameterTypes.length > 0 && Throwable.class.isAssignableFrom(parameterTypes[0])) {
+						// 提取第一个参数类型将其放入到异常和方法的映射表
 						@SuppressWarnings("unchecked")
 						Class<? extends Throwable> type = (Class<? extends Throwable>) parameterTypes[0];
 						types.put(type, method);
+						// 成员变量methods的设置
 						RecoverAnnotationRecoveryHandler.this.methods.put(method,
 								new SimpleMetadata(parameterTypes.length, type));
 					}
+					// 其他情况
 					else {
+						// 设置成员变量classifier和methods
 						RecoverAnnotationRecoveryHandler.this.classifier.setDefaultValue(method);
 						RecoverAnnotationRecoveryHandler.this.methods.put(method,
 								new SimpleMetadata(parameterTypes.length, null));
@@ -190,6 +244,7 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 				}
 			}
 		});
+		// 处理成员变量classifier和methods
 		this.classifier.setTypeMap(types);
 		optionallyFilterMethodsBy(failingMethod.getReturnType());
 	}
@@ -205,12 +260,16 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 	}
 
 	private void optionallyFilterMethodsBy(Class<?> returnClass) {
+		// 构造存储容器
 		Map<Method, SimpleMetadata> filteredMethods = new HashMap<Method, SimpleMetadata>();
+		// 循环方法映射表
 		for (Method method : this.methods.keySet()) {
+			// 判断返回值类型是否和传入的返回值类型相同，如果是则加入到存储容器中
 			if (method.getReturnType() == returnClass) {
 				filteredMethods.put(method, this.methods.get(method));
 			}
 		}
+		// 存储容器数量大于0的情况下将成员变量methods进行覆盖
 		if (filteredMethods.size() > 0) {
 			this.methods = filteredMethods;
 		}
