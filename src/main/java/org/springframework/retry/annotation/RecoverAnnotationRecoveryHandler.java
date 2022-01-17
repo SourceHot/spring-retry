@@ -152,13 +152,13 @@ public class RecoverAnnotationRecoveryHandler<T> implements MethodInvocationReco
 		else {
 			// 遍历方法映射表寻找方法
 			for (Map.Entry<Method, SimpleMetadata> entry : this.methods.entrySet()) {
-				// 获取当前方法
+				// 获取方法
 				Method method = entry.getKey();
 				// 判断当前处理的方法是否和成员变量recoverMethodName相同
 				if (method.getName().equals(this.recoverMethodName)) {
 					// 提取元数据
 					SimpleMetadata meta = entry.getValue();
-					// 判断输入的异常是否是元数据中的异常子类，同时机械能参数比较
+					// 判断输入的异常是否是元数据中的异常子类，同时进行参数比较
 					if (meta.type.isAssignableFrom(cause)
 							&& compareParameters(args, meta.getArgCount(), method.getParameterTypes())) {
 						result = method;
