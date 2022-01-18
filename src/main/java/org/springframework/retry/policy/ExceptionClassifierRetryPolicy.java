@@ -103,6 +103,9 @@ public class ExceptionClassifierRetryPolicy implements RetryPolicy {
 		((RetryContextSupport) context).registerThrowable(throwable);
 	}
 
+	/**
+	 * 异常分类重试上下文
+	 */
 	private static class ExceptionClassifierRetryContext extends RetryContextSupport implements RetryPolicy {
 
 		final private Classifier<Throwable, RetryPolicy> exceptionClassifier;
