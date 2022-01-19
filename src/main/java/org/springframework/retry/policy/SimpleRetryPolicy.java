@@ -64,8 +64,14 @@ public class SimpleRetryPolicy implements RetryPolicy {
 	 */
 	public final static int DEFAULT_MAX_ATTEMPTS = 3;
 
+	/**
+	 * 最大重试次数
+	 */
 	private volatile int maxAttempts;
 
+	/**
+	 * 异常分类器
+	 */
 	private BinaryExceptionClassifier retryableClassifier = new BinaryExceptionClassifier(false);
 
 	/**

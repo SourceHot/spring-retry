@@ -38,6 +38,11 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public class ExceptionClassifierRetryPolicy implements RetryPolicy {
 
+	/**
+	 * 异常分类器
+	 * key: 异常
+	 * value: RetryPolicy
+	 */
 	private Classifier<Throwable, RetryPolicy> exceptionClassifier = new ClassifierSupport<Throwable, RetryPolicy>(
 			new NeverRetryPolicy());
 
@@ -67,6 +72,7 @@ public class ExceptionClassifierRetryPolicy implements RetryPolicy {
 	 * @see org.springframework.retry.RetryPolicy#canRetry(org.springframework.retry.RetryContext)
 	 */
 	public boolean canRetry(RetryContext context) {
+		// 通过上下文判断是否支持重试
 		RetryPolicy policy = (RetryPolicy) context;
 		return policy.canRetry(context);
 	}
@@ -82,12 +88,12 @@ public class ExceptionClassifierRetryPolicy implements RetryPolicy {
 	}
 
 	/**
-	 * Create an active context that proxies a retry policy by choosing a target from the
-	 * policy map.
+	 * Create an active context that proxies a retry policy by choosing a target from the policy map.
 	 *
 	 * @see org.springframework.retry.RetryPolicy#open(RetryContext)
 	 */
 	public RetryContext open(RetryContext parent) {
+		// 开启ExceptionClassifierRetryContext上下文
 		return new ExceptionClassifierRetryContext(parent, exceptionClassifier).open(parent);
 	}
 

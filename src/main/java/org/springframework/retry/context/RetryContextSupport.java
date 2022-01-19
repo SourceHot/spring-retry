@@ -73,8 +73,9 @@ public class RetryContextSupport extends AttributeAccessorSupport implements Ret
 	 */
 	public void registerThrowable(Throwable throwable) {
 		this.lastException = throwable;
-		if (throwable != null)
+		if (throwable != null) {
 			count++;
+		}
 	}
 
 	@Override

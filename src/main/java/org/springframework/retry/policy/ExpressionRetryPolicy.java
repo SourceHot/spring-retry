@@ -44,10 +44,19 @@ public class ExpressionRetryPolicy extends SimpleRetryPolicy implements BeanFact
 
 	private static final Log logger = LogFactory.getLog(ExpressionRetryPolicy.class);
 
+	/**
+	 * 模板解析上下文
+	 */
 	private static final TemplateParserContext PARSER_CONTEXT = new TemplateParserContext();
 
+	/**
+	 * 表达式接口
+	 */
 	private final Expression expression;
 
+	/**
+	 * 评估上下文
+	 */
 	private final StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
 
 	/**
