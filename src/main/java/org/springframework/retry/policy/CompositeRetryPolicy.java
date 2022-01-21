@@ -64,20 +64,28 @@ public class CompositeRetryPolicy implements RetryPolicy {
 	 */
 	@Override
 	public boolean canRetry(RetryContext context) {
+		// 获取重试上下文集合
 		RetryContext[] contexts = ((CompositeRetryContext) context).contexts;
+		// 获取重试策略集合
 		RetryPolicy[] policies = ((CompositeRetryContext) context).policies;
 
+		// 重试标记
 		boolean retryable = true;
 
+		// 乐观的重试
 		if (this.optimistic) {
+			// 重试标记先设置为false
 			retryable = false;
+			// 循环所有重试上下文，通过重试策略对所有上下文进行是否可以重试的判断，只要有一个允许重试，重试标记就会设置为真
 			for (int i = 0; i < contexts.length; i++) {
 				if (policies[i].canRetry(contexts[i])) {
 					retryable = true;
 				}
 			}
 		}
+		// 非乐观的重试
 		else {
+			// 循环所有重试上下文，通过重试策略对所有上下文进行是否可以重试的判断，只要有一个不允许重试，重试标记就会设置为假
 			for (int i = 0; i < contexts.length; i++) {
 				if (!policies[i].canRetry(contexts[i])) {
 					retryable = false;

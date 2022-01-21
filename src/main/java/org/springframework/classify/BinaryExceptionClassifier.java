@@ -119,6 +119,7 @@ public class BinaryExceptionClassifier extends SubclassClassifier<Throwable, Boo
 
 	@Override
 	public Boolean classify(Throwable classifiable) {
+		// 通过父类进行判断
 		Boolean classified = super.classify(classifiable);
 		if (!this.traverseCauses) {
 			return classified;
