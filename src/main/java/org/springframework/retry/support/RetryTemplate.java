@@ -512,24 +512,35 @@ public class RetryTemplate implements RetryOperations {
 	 */
 	protected RetryContext open(RetryPolicy retryPolicy, RetryState state) {
 
+		// 如果重试状态为空
 		if (state == null) {
+			// 通过RetryPolicy接口开启上下文
 			return doOpenInternal(retryPolicy);
 		}
 
+		// 将重试状态中的key获取
 		Object key = state.getKey();
+
+		// 判断是否需要强制刷新
 		if (state.isForceRefresh()) {
+			// 通过RetryPolicy接口开启上下文
 			return doOpenInternal(retryPolicy, state);
 		}
 
 		// If there is no cache hit we can avoid the possible expense of the
 		// cache re-hydration.
+		// key在缓存中不存在
 		if (!this.retryContextCache.containsKey(key)) {
 			// The cache is only used if there is a failure.
+			// 通过RetryPolicy接口开启上下文
 			return doOpenInternal(retryPolicy, state);
 		}
 
+		// 从缓存中获取重试上下文
 		RetryContext context = this.retryContextCache.get(key);
+		// 重试上下文为空
 		if (context == null) {
+			// key在缓存中存在数据抛出异常
 			if (this.retryContextCache.containsKey(key)) {
 				throw new RetryException("Inconsistent state for failed item: no history found. "
 						+ "Consider whether equals() or hashCode() for the item might be inconsistent, "
@@ -537,10 +548,12 @@ public class RetryTemplate implements RetryOperations {
 			}
 			// The cache could have been expired in between calls to
 			// containsKey(), so we have to live with this:
+			// 通过RetryPolicy接口开启上下文
 			return doOpenInternal(retryPolicy, state);
 		}
 
 		// Start with a clean slate for state that others may be inspecting
+		// 移除上下文属性
 		context.removeAttribute(RetryContext.CLOSED);
 		context.removeAttribute(RetryContext.EXHAUSTED);
 		context.removeAttribute(RetryContext.RECOVERED);

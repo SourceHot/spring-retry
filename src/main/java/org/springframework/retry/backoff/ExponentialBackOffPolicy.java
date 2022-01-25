@@ -48,34 +48,44 @@ public class ExponentialBackOffPolicy implements SleepingBackOffPolicy<Exponenti
 	/**
 	 * The default 'initialInterval' value - 100 millisecs. Coupled with the default
 	 * 'multiplier' value this gives a useful initial spread of pauses for 1-5 retries.
+	 * 默认初始间隔
 	 */
 	public static final long DEFAULT_INITIAL_INTERVAL = 100L;
 
 	/**
 	 * The default maximum backoff time (30 seconds).
+	 * 默认最大间隔
 	 */
 	public static final long DEFAULT_MAX_INTERVAL = 30000L;
 
 	/**
 	 * The default 'multiplier' value - value 2 (100% increase per backoff).
+	 * 默认乘数
 	 */
 	public static final double DEFAULT_MULTIPLIER = 2;
 
 	/**
 	 * The initial backoff interval.
+	 * 初始间隔
 	 */
 	private volatile long initialInterval = DEFAULT_INITIAL_INTERVAL;
 
 	/**
 	 * The maximum value of the backoff period in milliseconds.
+	 * 最大间隔
 	 */
 	private volatile long maxInterval = DEFAULT_MAX_INTERVAL;
 
 	/**
 	 * The value to add to the backoff period for each retry attempt.
+	 *
+	 * 乘数
 	 */
 	private volatile double multiplier = DEFAULT_MULTIPLIER;
 
+	/**
+	 * 暂停器
+	 */
 	private Sleeper sleeper = new ThreadWaitSleeper();
 
 	/**

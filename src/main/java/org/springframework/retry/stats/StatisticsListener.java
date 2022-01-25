@@ -38,8 +38,11 @@ public class StatisticsListener extends RetryListenerSupport {
 	@Override
 	public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback,
 			Throwable throwable) {
+		// 获取名称
 		String name = getName(context);
+		// 名称不为空
 		if (name != null) {
+			//
 			if (!isExhausted(context) || isGlobal(context)) {
 				// If exhausted and stateful then the retry callback was not called. If
 				// exhausted and stateless it was called, but the started counter was
@@ -48,18 +51,16 @@ public class StatisticsListener extends RetryListenerSupport {
 			}
 			if (isRecovered(context)) {
 				repository.addRecovery(name);
-			}
-			else if (isExhausted(context)) {
+			} else if (isExhausted(context)) {
 				repository.addAbort(name);
-			}
-			else if (isClosed(context)) {
+			} else if (isClosed(context)) {
 				repository.addComplete(name);
 			}
 			RetryStatistics stats = repository.findOne(name);
 			if (stats instanceof AttributeAccessor) {
 				AttributeAccessor accessor = (AttributeAccessor) stats;
-				for (String key : new String[] { CircuitBreakerRetryPolicy.CIRCUIT_OPEN,
-						CircuitBreakerRetryPolicy.CIRCUIT_SHORT_COUNT }) {
+				for (String key : new String[]{CircuitBreakerRetryPolicy.CIRCUIT_OPEN,
+						CircuitBreakerRetryPolicy.CIRCUIT_SHORT_COUNT}) {
 					if (context.hasAttribute(key)) {
 						accessor.setAttribute(key, context.getAttribute(key));
 					}
