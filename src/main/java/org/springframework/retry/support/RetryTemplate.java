@@ -562,10 +562,13 @@ public class RetryTemplate implements RetryOperations {
 	}
 
 	private RetryContext doOpenInternal(RetryPolicy retryPolicy, RetryState state) {
+		// 通过RetryPolicy接口提供的open方法开启重试上下文
 		RetryContext context = retryPolicy.open(RetrySynchronizationManager.getContext());
+		// 如果状态不为空则设置状态属性
 		if (state != null) {
 			context.setAttribute(RetryContext.STATE_KEY, state.getKey());
 		}
+		// 如果存在全局状态属性则注册缓存上下文
 		if (context.hasAttribute(GLOBAL_STATE)) {
 			registerContext(context, state);
 		}
@@ -593,19 +596,26 @@ public class RetryTemplate implements RetryOperations {
 	 */
 	protected <T> T handleRetryExhausted(RecoveryCallback<T> recoveryCallback, RetryContext context, RetryState state)
 			throws Throwable {
+		// 设置EXHAUSTED属性为真
 		context.setAttribute(RetryContext.EXHAUSTED, true);
+		// 如果重试状态不为空并且不存在GLOBAL_STATE属性
 		if (state != null && !context.hasAttribute(GLOBAL_STATE)) {
+			// 重试上下文换成中移除重试状态对应的数据
 			this.retryContextCache.remove(state.getKey());
 		}
+		// 参数recoveryCallback不为空的情况下执行recover方法设置属性RECOVERED为真
 		if (recoveryCallback != null) {
 			T recovered = recoveryCallback.recover(context);
 			context.setAttribute(RetryContext.RECOVERED, true);
 			return recovered;
 		}
+		// 重试状态不为空
 		if (state != null) {
 			this.logger.debug("Retry exhausted after last attempt with no recovery path.");
+			// 抛出异常
 			rethrow(context, "Retry exhausted after last attempt with no recovery path");
 		}
+		// 包装异常抛出
 		throw wrapIfNecessary(context.getLastThrowable());
 	}
 
